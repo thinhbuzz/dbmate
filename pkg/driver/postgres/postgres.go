@@ -140,7 +140,7 @@ func connectionString(u *url.URL) string {
 	return out.String()
 }
 
-func connectionArgsForDump(conn *url.URL) []string {
+func connectionArgsForDump(conn *url.URL, userArgs ...string) []string {
 	u, err := url.Parse(connectionString(conn))
 	if err != nil {
 		panic(err)
@@ -160,8 +160,9 @@ func connectionArgsForDump(conn *url.URL) []string {
 			out = append(out, "--schema", schema)
 		}
 	}
-	out = append(out, u.String())
 
+	out = append(out, userArgs...)
+	out = append(out, u.String())
 	return out
 }
 
@@ -246,7 +247,7 @@ func (drv *Driver) schemaMigrationsDump(db *sql.DB) ([]byte, error) {
 }
 
 // DumpSchema returns the current database schema
-func (drv *Driver) DumpSchema(db *sql.DB) ([]byte, error) {
+func (drv *Driver) DumpSchema(db *sql.DB, extraArgs ...string) ([]byte, error) {
 	// load schema
 	args := []string{"--format=plain", "--encoding=UTF8", "--schema-only",
 		"--no-privileges", "--no-owner"}
@@ -258,7 +259,7 @@ func (drv *Driver) DumpSchema(db *sql.DB) ([]byte, error) {
 		args = append(args, "--restrict-key=dbmate")
 	}
 
-	args = append(args, connectionArgsForDump(drv.databaseURL)...)
+	args = append(args, connectionArgsForDump(drv.databaseURL, extraArgs...)...)
 	schema, err := dbutil.RunCommand("pg_dump", args...)
 	if err != nil {
 		return nil, err

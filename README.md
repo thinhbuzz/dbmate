@@ -111,18 +111,19 @@ docker run --rm -it --network=host -v "$(pwd)/db:/db" ghcr.io/amacneil/dbmate ne
 ## Commands
 
 ```sh
-dbmate --help    # print usage help
-dbmate new       # generate a new migration file
-dbmate up        # create the database (if it does not already exist) and run any pending migrations
-dbmate create    # create the database
-dbmate drop      # drop the database
-dbmate migrate   # run any pending migrations
-dbmate rollback  # roll back the most recent migration
-dbmate down      # alias for rollback
-dbmate status    # show the status of all migrations (supports --exit-code and --quiet)
-dbmate dump      # write the database schema.sql file
-dbmate load      # load schema.sql file to the database
-dbmate wait      # wait for the database server to become available
+dbmate --help         # print usage help
+dbmate new            # generate a new migration file
+dbmate up             # create the database (if it does not already exist) and run any pending migrations
+dbmate create         # create the database
+dbmate drop           # drop the database
+dbmate migrate        # run any pending migrations
+dbmate rollback       # roll back the most recent migration
+dbmate down           # alias for rollback
+dbmate status         # show the status of all migrations (supports --exit-code and --quiet)
+dbmate dump           # write the database schema.sql file
+dbmate dump -- [...]  # optionally pass additional arguments directly to mysqldump or pg_dump
+dbmate load           # load schema.sql file to the database
+dbmate wait           # wait for the database server to become available
 ```
 
 ### Command Line Options
@@ -527,13 +528,25 @@ When you run the `up`, `migrate`, or `rollback` commands, dbmate will automatica
 It is recommended to check this file into source control, so that you can easily review changes to the schema in commits or pull requests. It's also possible to use this file when you want to quickly load a database schema, without running each migration sequentially (for example in your test harness). However, if you do not wish to save this file, you could add it to your `.gitignore`, or pass the `--no-dump-schema` command line option.
 
 To dump the `schema.sql` file without performing any other actions, run `dbmate dump`. Unlike other dbmate actions, this command relies on the respective `pg_dump`, `mysqldump`, or `sqlite3` commands being available in your PATH. If these tools are not available, dbmate will silently skip the schema dump step during `up`, `migrate`, or `rollback` actions. You can diagnose the issue by running `dbmate dump` and looking at the output:
-
 ```sh
 $ dbmate dump
 exec: "pg_dump": executable file not found in $PATH
 ```
-
 On Ubuntu or Debian systems, you can fix this by installing `postgresql-client`, `mysql-client`, or `sqlite3` respectively. Ensure that the package version you install is greater than or equal to the version running on your database server.
+
+It is possible to pass additional arguments directly to mysqldump or pg_dump:
+```sh
+$ dbmate dump -- --flag1 --flag2
+$ dbmate --url="..." dump -- --restrict-key=restrict_key
+```
+for mysqldump:
+```sh
+mysqldump [default_options] [your_arguments_go_here] dbname
+```
+for pg_dump:
+```sh
+pg_dump [default_options] [your_arguments_go_here] dbname
+``` 
 
 > Note: The `schema.sql` file will contain a complete schema for your database, even if some tables or columns were created outside of dbmate migrations.
 
